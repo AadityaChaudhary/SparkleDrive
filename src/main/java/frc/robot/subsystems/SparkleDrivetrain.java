@@ -11,6 +11,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Util.Constants;
 import frc.robot.Util.SparkyConfig;
 import frc.robot.commands.SparkyDrive;
@@ -39,6 +40,12 @@ public class SparkleDrivetrain extends Subsystem {
 
     SparkyConfig.config(leftM,rightM,leftS,rightS);
 
+  }
+
+  public void postSpeed()
+  {
+    SmartDashboard.putNumber("left master", leftM.getEncoder().getVelocity());
+    SmartDashboard.putNumber("right master", rightM.getEncoder().getVelocity());
   }
 
   public void arcadeDrive(double speed, double turn)

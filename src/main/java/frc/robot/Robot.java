@@ -39,7 +39,7 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     m_oi = new OI();
     sparky = new SparkleDrivetrain(1,2,MotorType.kBrushless);
-    
+
 //    m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
@@ -124,6 +124,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     Scheduler.getInstance().run();
+    sparky.postSpeed();
   }
 
   /**
