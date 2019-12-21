@@ -2,7 +2,7 @@ package frc.robot.Util;
 
 public class Constants
 {
-    public static final double TURN_WEIGHT_FACTOR = 0.2;
+    public static final double TURN_WEIGHT_FACTOR = 0.1;
     
     public static final int HATCH_1 = 900;
     public static final int HATCH_2 = 7200; //Just a guess - Aadi
