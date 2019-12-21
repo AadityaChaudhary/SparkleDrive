@@ -22,10 +22,10 @@ public class SparkyConfig
         // rightS.setIdleMode(IdleMode.kCoast);
         // leftS.setIdleMode(IdleMode.kCoast);
 
-        rightM.setOpenLoopRampRate(0.5);
-        leftM.setOpenLoopRampRate(0.5);
-        rightS.setOpenLoopRampRate(0.5);
-        leftS.setOpenLoopRampRate(0.5);
+        rightM.setOpenLoopRampRate(0.65);
+        leftM.setOpenLoopRampRate(0.65);
+        rightS.setOpenLoopRampRate(0.65);
+        leftS.setOpenLoopRampRate(0.65);
 
         // setting slaves to follow
         leftS.follow(leftM);
