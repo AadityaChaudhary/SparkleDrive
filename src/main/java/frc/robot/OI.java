@@ -30,12 +30,13 @@ public class OI {
 
   public double getTrigger(Hand h)
   {
-    return deadzone(driver.getTriggerAxis(h),0.3);
+    return deadzone(driver.getTriggerAxis(h),0.1);
   }
 
 
   private double deadzone(double input, double deadzone)
   {
-    return input < deadzone? 0.0: input;
+    if(input > 0) return input < deadzone? 0.0: input;
+    return input > -deadzone? 0.0:input;
   }
 }

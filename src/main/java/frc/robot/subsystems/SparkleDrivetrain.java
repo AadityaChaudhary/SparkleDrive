@@ -23,20 +23,20 @@ public class SparkleDrivetrain extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
 
-  CANSparkMax leftM;
-  CANSparkMax rightM;
-  CANSparkMax leftS;
-  CANSparkMax rightS;
+  public CANSparkMax leftM;
+  public CANSparkMax rightM;
+  public CANSparkMax leftS;
+  public CANSparkMax rightS;
 
   
 
-  public SparkleDrivetrain(int leftID, int rightID, MotorType type)
+  public SparkleDrivetrain(int leftID, int rightID, int leftSID, int rightSID, MotorType type)
   {
     leftM = new CANSparkMax(leftID, type);
     rightM = new CANSparkMax(rightID, type);
 
-    leftS = new CANSparkMax(leftID, type);
-    rightS = new CANSparkMax(rightID, type); 
+    leftS = new CANSparkMax(leftSID, type);
+    rightS = new CANSparkMax(rightSID, type); 
 
     SparkyConfig.config(leftM,rightM,leftS,rightS);
 
@@ -56,6 +56,7 @@ public class SparkleDrivetrain extends Subsystem {
 
   public void arcadeDriveWF(double speed, double turn)
   {
+    SmartDashboard.putNumber("turn", turn);
     double left;
       double right;
 
@@ -76,6 +77,8 @@ public class SparkleDrivetrain extends Subsystem {
 
   void tankDrive(double left, double right)
   {
+    SmartDashboard.putNumber("left", left);
+    SmartDashboard.putNumber("right", right);
     leftM.set(left);
     rightM.set(right);
   }

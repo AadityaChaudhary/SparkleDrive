@@ -8,6 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 
 public class SparkyDrive extends Command {
@@ -25,6 +26,7 @@ public class SparkyDrive extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+    SmartDashboard.putNumber("turn joy",Robot.m_oi.getDriverLeftStickX());
     Robot.sparky.arcadeDriveWF(Robot.m_oi.driveControl(), Robot.m_oi.getDriverLeftStickX());
   }
 

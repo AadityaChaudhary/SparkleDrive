@@ -38,7 +38,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_oi = new OI();
-    sparky = new SparkleDrivetrain(1,2,MotorType.kBrushless);
+    sparky = new SparkleDrivetrain(1,3,2,4,MotorType.kBrushless);
 
 //    m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
     // chooser.addOption("My Auto", new MyAutoCommand());
@@ -55,6 +55,19 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+
+    // getting encoder things
+    SmartDashboard.putNumber("LeftM v",sparky.leftM.getEncoder().getVelocity());
+    SmartDashboard.putNumber("RightM v",sparky.rightM.getEncoder().getVelocity());
+    SmartDashboard.putNumber("LeftS v",sparky.leftS.getEncoder().getVelocity());
+    SmartDashboard.putNumber("RightS v",sparky.rightS.getEncoder().getVelocity());
+    
+    // applied output of all motors
+    SmartDashboard.putNumber("rightM output",sparky.rightM.getAppliedOutput());
+    SmartDashboard.putNumber("rightS output",sparky.rightS.getAppliedOutput());
+    SmartDashboard.putNumber("leftM output",sparky.leftM.getAppliedOutput());
+    SmartDashboard.putNumber("leftS output", sparky.leftS.getAppliedOutput());
+
   }
 
   /**
