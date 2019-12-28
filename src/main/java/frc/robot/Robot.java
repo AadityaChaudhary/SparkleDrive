@@ -1,149 +1,193 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
-
 package frc.robot;
 
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import com.revrobotics.CANEncoder;
+import com.revrobotics.CANPIDController;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.command.Scheduler;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.SparkleDrivetrain;
-
+/**
+ * Before Running:
+ * Open shuffleBoard, select File->Load Layout and select the 
+ * shuffleboard.json that is in the root directory of this example
+ */
 
 /**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the TimedRobot
- * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the build.gradle file in the
- * project.
+ * REV Smart Motion Guide
+ * 
+ * The SPARK MAX includes a new control mode, REV Smart Motion which is used to 
+ * control the position of the motor, and includes a max velocity and max 
+ * acceleration parameter to ensure the motor moves in a smooth and predictable 
+ * way. This is done by generating a motion profile on the fly in SPARK MAX and 
+ * controlling the velocity of the motor to follow this profile.
+ * 
+ * Since REV Smart Motion uses the velocity to track a profile, there are only 
+ * two steps required to configure this mode:
+ *    1) Tune a velocity PID loop for the mechanism
+ *    2) Configure the smart motion parameters
+ * 
+ * Tuning the Velocity PID Loop
+ * 
+ * The most important part of tuning any closed loop control such as the velocity 
+ * PID, is to graph the inputs and outputs to understand exactly what is happening. 
+ * For tuning the Velocity PID loop, at a minimum we recommend graphing:
+ *
+ *    1) The velocity of the mechanism (‘Process variable’)
+ *    2) The commanded velocity value (‘Setpoint’)
+ *    3) The applied output
+ *
+ * This example will use ShuffleBoard to graph the above parameters. Make sure to
+ * load the shuffleboard.json file in the root of this directory to get the full
+ * effect of the GUI layout.
  */
 public class Robot extends TimedRobot {
-  //public static ExampleSubsystem m_subsystem = new ExampleSubsystem();
-  public static OI m_oi;
-  public static SparkleDrivetrain sparky;
-  Command m_autonomousCommand;
-  SendableChooser<Command> m_chooser = new SendableChooser<>();
-
-  /**
-   * This function is run when the robot is first started up and should be
-   * used for any initialization code.
-   */
-  @Override
-  public void robotInit() {
-    m_oi = new OI();
-    sparky = new SparkleDrivetrain(1,3,2,4,MotorType.kBrushless);
-
-//    m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
-    // chooser.addOption("My Auto", new MyAutoCommand());
-    SmartDashboard.putData("Auto mode", m_chooser);
-  }
-
-  /**
-   * This function is called every robot packet, no matter the mode. Use
-   * this for items like diagnostics that you want ran during disabled,
-   * autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before
-   * LiveWindow and SmartDashboard integrated updating.
-   */
-  @Override
-  public void robotPeriodic() {
-
-    // getting encoder things
-    SmartDashboard.putNumber("LeftM v",sparky.leftM.getEncoder().getVelocity());
-    SmartDashboard.putNumber("RightM v",sparky.rightM.getEncoder().getVelocity());
-    SmartDashboard.putNumber("LeftS v",sparky.leftS.getEncoder().getVelocity());
-    SmartDashboard.putNumber("RightS v",sparky.rightS.getEncoder().getVelocity());
-    
-    // applied output of all motors
-    SmartDashboard.putNumber("rightM output",sparky.rightM.getAppliedOutput());
-    SmartDashboard.putNumber("rightS output",sparky.rightS.getAppliedOutput());
-    SmartDashboard.putNumber("leftM output",sparky.leftM.getAppliedOutput());
-    SmartDashboard.putNumber("leftS output", sparky.leftS.getAppliedOutput());
-
-  }
-
-  /**
-   * This function is called once each time the robot enters Disabled mode.
-   * You can use it to reset any subsystem information you want to clear when
-   * the robot is disabled.
-   */
-  @Override
-  public void disabledInit() {
-  }
+ // private SparkleDrivetrain sparky;
+  private CANSparkMax m_motor;
+  private CANSparkMax mtrSlave;
+  private CANPIDController m_pidController;
+  private CANEncoder m_encoder;
+  public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, maxVel, minVel, maxAcc, allowedErr;
 
   @Override
-  public void disabledPeriodic() {
-    Scheduler.getInstance().run();
-  }
-
-  /**
-   * This autonomous (along with the chooser code above) shows how to select
-   * between different autonomous modes using the dashboard. The sendable
-   * chooser code works with the Java SmartDashboard. If you prefer the
-   * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-   * getString code to get the auto name from the text box below the Gyro
-   *
-   * <p>You can add additional auto modes by adding additional commands to the
-   * chooser code above (like the commented example) or additional comparisons
-   * to the switch structure below with additional strings & commands.
-   */
-  @Override
-  public void autonomousInit() {
-    m_autonomousCommand = m_chooser.getSelected();
-
-    /*
-     * String autoSelected = SmartDashboard.getString("Auto Selector",
-     * "Default"); switch(autoSelected) { case "My Auto": autonomousCommand
-     * = new MyAutoCommand(); break; case "Default Auto": default:
-     * autonomousCommand = new ExampleCommand(); break; }
+  public void robotInit() { 
+    // initialize motor
+    m_motor = new CANSparkMax(3, MotorType.kBrushless);
+    mtrSlave = new CANSparkMax(4,MotorType.kBrushless);
+    /**
+     * The RestoreFactoryDefaults method can be used to reset the configuration parameters
+     * in the SPARK MAX to their factory default state. If no argument is passed, these
+     * parameters will not persist between power cycles
      */
+    m_motor.restoreFactoryDefaults();
 
-    // schedule the autonomous command (example)
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.start();
-    }
+    
+
+    // initialze PID controller and encoder objects
+    m_pidController = m_motor.getPIDController();
+    m_encoder = m_motor.getEncoder();
+
+    // PID coefficients
+    kP = 5e-5; 
+    kI = 1e-6;
+    kD = 0; 
+    kIz = 0; 
+    kFF = 0.000156; 
+    kMaxOutput = 1; 
+    kMinOutput = -1;
+    maxRPM = 5700;
+
+    // Smart Motion Coefficients
+    maxVel = 2000; // rpm
+    maxAcc = 1500;
+
+    // set PID coefficients
+    m_pidController.setP(kP);
+    m_pidController.setI(kI);
+    m_pidController.setD(kD);
+    m_pidController.setIZone(kIz);
+    m_pidController.setFF(kFF);
+    m_pidController.setOutputRange(kMinOutput, kMaxOutput);
+
+    /**
+     * Smart Motion coefficients are set on a CANPIDController object
+     * 
+     * - setSmartMotionMaxVelocity() will limit the velocity in RPM of
+     * the pid controller in Smart Motion mode
+     * - setSmartMotionMinOutputVelocity() will put a lower bound in
+     * RPM of the pid controller in Smart Motion mode
+     * - setSmartMotionMaxAccel() will limit the acceleration in RPM^2
+     * of the pid controller in Smart Motion mode
+     * - setSmartMotionAllowedClosedLoopError() will set the max allowed
+     * error for the pid controller in Smart Motion mode
+     */
+    int smartMotionSlot = 0;
+    m_pidController.setSmartMotionMaxVelocity(maxVel, smartMotionSlot);
+    m_pidController.setSmartMotionMinOutputVelocity(minVel, smartMotionSlot);
+    m_pidController.setSmartMotionMaxAccel(maxAcc, smartMotionSlot);
+    m_pidController.setSmartMotionAllowedClosedLoopError(allowedErr, smartMotionSlot);
+
+    // display PID coefficients on SmartDashboard
+    SmartDashboard.putNumber("P Gain", kP);
+    SmartDashboard.putNumber("I Gain", kI);
+    SmartDashboard.putNumber("D Gain", kD);
+    SmartDashboard.putNumber("I Zone", kIz);
+    SmartDashboard.putNumber("Feed Forward", kFF);
+    SmartDashboard.putNumber("Max Output", kMaxOutput);
+    SmartDashboard.putNumber("Min Output", kMinOutput);
+
+    // display Smart Motion coefficients
+    SmartDashboard.putNumber("Max Velocity", maxVel);
+    SmartDashboard.putNumber("Min Velocity", minVel);
+    SmartDashboard.putNumber("Max Acceleration", maxAcc);
+    SmartDashboard.putNumber("Allowed Closed Loop Error", allowedErr);
+    SmartDashboard.putNumber("Set Position", 0);
+    SmartDashboard.putNumber("Set Velocity", 0);
+
+    // button to toggle between velocity and smart motion modes
+    SmartDashboard.putBoolean("Mode", true);
+    mtrSlave.follow(m_motor);
   }
 
-  /**
-   * This function is called periodically during autonomous.
-   */
-  @Override
-  public void autonomousPeriodic() {
-    Scheduler.getInstance().run();
+  public void robotPeriodic() {
+    SmartDashboard.putNumber("encoder val", m_encoder.getPosition()) ;
   }
 
-  @Override
-  public void teleopInit() {
-    // This makes sure that the autonomous stops running when
-    // teleop starts running. If you want the autonomous to
-    // continue until interrupted by another command, remove
-    // this line or comment it out.
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
-    }
-  }
-
-  /**
-   * This function is called periodically during operator control.
-   */
   @Override
   public void teleopPeriodic() {
-    Scheduler.getInstance().run();
-    sparky.postSpeed();
-  }
+    // read PID coefficients from SmartDashboard
+    
+    double p = SmartDashboard.getNumber("P Gain", 0);
+    double i = SmartDashboard.getNumber("I Gain", 0);
+    double d = SmartDashboard.getNumber("D Gain", 0);
+    double iz = SmartDashboard.getNumber("I Zone", 0);
+    double ff = SmartDashboard.getNumber("Feed Forward", 0);
+    double max = SmartDashboard.getNumber("Max Output", 0);
+    double min = SmartDashboard.getNumber("Min Output", 0);
+    double maxV = SmartDashboard.getNumber("Max Velocity", 0);
+    double minV = SmartDashboard.getNumber("Min Velocity", 0);
+    double maxA = SmartDashboard.getNumber("Max Acceleration", 0);
+    double allE = SmartDashboard.getNumber("Allowed Closed Loop Error", 0);
+   
+    // if PID coefficients on SmartDashboard have changed, write new values to controller
+    if((p != kP)) { m_pidController.setP(p); kP = p; }
+    if((i != kI)) { m_pidController.setI(i); kI = i; }
+    if((d != kD)) { m_pidController.setD(d); kD = d; }
+    if((iz != kIz)) { m_pidController.setIZone(iz); kIz = iz; }
+    if((ff != kFF)) { m_pidController.setFF(ff); kFF = ff; }
+    if((max != kMaxOutput) || (min != kMinOutput)) { 
+      m_pidController.setOutputRange(min, max); 
+      kMinOutput = min; kMaxOutput = max; 
+    }
+    if((maxV != maxVel)) { m_pidController.setSmartMotionMaxVelocity(maxV,0); maxVel = maxV; }
+    if((minV != minVel)) { m_pidController.setSmartMotionMinOutputVelocity(minV,0); minVel = minV; }
+    if((maxA != maxAcc)) { m_pidController.setSmartMotionMaxAccel(maxA,0); maxAcc = maxA; }
+    if((allE != allowedErr)) { m_pidController.setSmartMotionAllowedClosedLoopError(allE,0); allowedErr = allE; }
 
-  /**
-   * This function is called periodically during test mode.
-   */
-  @Override
-  public void testPeriodic() {
+    double setPoint, processVariable;
+    boolean mode = SmartDashboard.getBoolean("Mode", false);
+    if(mode) {
+      SmartDashboard.putBoolean("velocity", true);
+      setPoint = SmartDashboard.getNumber("Set Velocity", 0);
+      m_pidController.setReference(setPoint, ControlType.kVelocity);
+      processVariable = m_encoder.getVelocity();
+    } else {
+      SmartDashboard.putBoolean("velocity", false);
+      setPoint = SmartDashboard.getNumber("Set Position", 0);
+      /**
+       * As with other PID modes, Smart Motion is set by calling the
+       * setReference method on an existing pid object and setting
+       * the control type to kSmartMotion
+       */
+      m_pidController.setReference(setPoint, ControlType.kSmartMotion);
+      processVariable = m_encoder.getPosition();
+      SmartDashboard.putNumber("error", setPoint - processVariable);
+    }
+    
+    SmartDashboard.putNumber("SetPoint", setPoint);
+    SmartDashboard.putNumber("Process Variable", processVariable);
+    SmartDashboard.putNumber("Output", m_motor.getAppliedOutput());
   }
 }

@@ -15,7 +15,7 @@ public class SparkyDrive extends Command {
 
   public SparkyDrive() {
     // Use requires() here to declare subsystem dependencies
-    requires(Robot.sparky);
+  //  requires(Robot.sparky);
   }
 
   // Called just before this Command runs the first time
@@ -26,8 +26,8 @@ public class SparkyDrive extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    SmartDashboard.putNumber("turn joy",Robot.m_oi.getDriverLeftStickX());
-    Robot.sparky.arcadeDriveWF(Robot.m_oi.driveControl(), Robot.m_oi.getDriverLeftStickX());
+    // SmartDashboard.putNumber("turn joy",Robot.m_oi.getDriverLeftStickX());
+    // Robot.sparky.arcadeDriveWF(Robot.m_oi.driveControl(), Robot.m_oi.getDriverLeftStickX());
   }
 
   // Make this return true when this Command no longer needs to run execute()

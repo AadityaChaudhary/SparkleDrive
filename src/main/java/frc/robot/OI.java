@@ -16,27 +16,27 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
  */
 public class OI {
 
-  XboxController driver = new XboxController(0);
+  // XboxController driver = new XboxController(0);
 
-  public double driveControl()
-  {
-    return getTrigger(Hand.kRight) - getTrigger(Hand.kLeft);
-  }
+  // public double driveControl()
+  // {
+  //   return getTrigger(Hand.kRight) - getTrigger(Hand.kLeft);
+  // }
 
-  public double getDriverLeftStickX()
-  {
-    return deadzone(driver.getX(Hand.kLeft),0.2);
-  }
+  // public double getDriverLeftStickX()
+  // {
+  //   return deadzone(driver.getX(Hand.kLeft),0.2);
+  // }
 
-  public double getTrigger(Hand h)
-  {
-    return deadzone(driver.getTriggerAxis(h),0.1);
-  }
+  // public double getTrigger(Hand h)
+  // {
+  //   return deadzone(driver.getTriggerAxis(h),0.1);
+  // }
 
 
-  private double deadzone(double input, double deadzone)
-  {
-    if(input > 0) return input < deadzone? 0.0: input;
-    return input > -deadzone? 0.0:input;
-  }
+  // private double deadzone(double input, double deadzone)
+  // {
+  //   if(input > 0) return input < deadzone? 0.0: input;
+  //   return input > -deadzone? 0.0:input;
+  // }
 }

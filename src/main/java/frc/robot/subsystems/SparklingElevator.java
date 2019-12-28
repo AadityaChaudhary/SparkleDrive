@@ -55,11 +55,11 @@ public class SparklingElevator extends Subsystem {
     }
 }
 
-  public SparklingElevator(int a, int b, int c, int d, MotorType type) {
-    elevatorMaster = new CANSparkMax(a,type);
-    elevatorSlave0 = new CANSparkMax(b, type);
-    elevatorSlave1 = new CANSparkMax(c, type);
-    elevatorSlave2 = new CANSparkMax(d, type);
+  public SparklingElevator(int master, int slave0, int slave1, int slave2, MotorType type) {
+    elevatorMaster = new CANSparkMax(master,type);
+    elevatorSlave0 = new CANSparkMax(slave0, type);
+    elevatorSlave1 = new CANSparkMax(slave1, type);
+    elevatorSlave2 = new CANSparkMax(slave2, type);
 
     
   }
