@@ -17,8 +17,8 @@ public class SparkyConfig
         rightM.setInverted(true);
         rightS.setInverted(true);
 
-        rightM.setIdleMode(IdleMode.kCoast);
-        leftM.setIdleMode(IdleMode.kCoast);
+        rightM.setIdleMode(IdleMode.kBrake);
+        leftM.setIdleMode(IdleMode.kBrake);
         // rightS.setIdleMode(IdleMode.kCoast);
         // leftS.setIdleMode(IdleMode.kCoast);
 
